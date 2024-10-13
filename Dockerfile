@@ -8,27 +8,29 @@ RUN apt-get update && apt-get install -y \
     git \
     && apt-get clean
 
-# Set up environment variables
+# Set up environment variables for Android SDK
 ENV ANDROID_HOME /opt/android-sdk
-ENV PATH ${PATH}:${ANDROID_HOME}/tools:${ANDROID_HOME}/platform-tools
+ENV PATH ${PATH}:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools
+
+# Create directories for the SDK
+RUN mkdir -p ${ANDROID_HOME}/cmdline-tools
 
 # Download Android SDK command-line tools
-RUN mkdir -p ${ANDROID_HOME} && \
-    cd ${ANDROID_HOME} && \
-    wget https://dl.google.com/android/repository/commandlinetools-linux-8092744_latest.zip -O commandlinetools.zip && \
-    unzip commandlinetools.zip && \
-    rm commandlinetools.zip
+RUN wget https://dl.google.com/android/repository/commandlinetools-linux-8092744_latest.zip -O /tmp/cmdline-tools.zip \
+    && unzip /tmp/cmdline-tools.zip -d ${ANDROID_HOME}/cmdline-tools \
+    && rm /tmp/cmdline-tools.zip \
+    && mv ${ANDROID_HOME}/cmdline-tools/cmdline-tools ${ANDROID_HOME}/cmdline-tools/latest
 
 # Accept Android SDK licenses
-RUN yes | ${ANDROID_HOME}/cmdline-tools/bin/sdkmanager --licenses
+RUN yes | ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --licenses
 
 # Install required SDKs and build tools
-RUN ${ANDROID_HOME}/cmdline-tools/bin/sdkmanager \
+RUN ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager \
     "platform-tools" \
     "platforms;android-30" \
     "build-tools;30.0.3"
 
-# Create a working directory
+# Set the working directory
 WORKDIR /app
 
 # Copy the Android project to the Docker container
